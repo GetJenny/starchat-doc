@@ -84,11 +84,9 @@
         <li class="main active"><a href="#welcome">Welcome!</a></li>
         <li class="main "><a href="#how-to-contribute">How to contribute</a></li>
         <li class="main "><a href="#quick-start">Quick Start</a></li>
-            <li><a href="#requirements">Requirements</a></li>
-            <li><a href="#setup-with-docker-recommended">Setup with Docker (recommended)</a></li>
-            <li><a href="#install-without-docker">Install without Docker</a></li>
-            <li><a href="#install-local-docker-for-testing-branches">Install local Docker (for testing branches)</a></li>
-            <li><a href="#test-the-installation">Test the installation</a></li>
+            <li><a href="#1-installation">1. Installation</a></li>
+            <li><a href="#2-development-envinroment">2. Development Envinroment</a></li>
+            <li><a href="#3-docker-image-creation-for-testing-branches">3. Docker Image Creation for testing branches</a></li>
             <li><a href="#configuration-of-the-chatbot-decision-table">Configuration of the chatbot (Decision Table)</a></li>
             <li><a href="#nlp-processing">NLP processing</a></li>
             <li><a href="#analyzer">Analyzer</a></li>
@@ -108,7 +106,8 @@
         <li class="main "><a href="#troubleshooting">Troubleshooting</a></li>
             <li><a href="#docker-start-from-scratch">Docker: start from scratch</a></li>
             <li><a href="#docker-compose-analyzers-are-not-loaded">docker-compose: Analyzers are not loaded</a></li>
-            <li><a href="#docker-size-of-virtual-memory">Docker: Size of virtual memory</a></li>
+            <li><a href="#docker-elasticsearch-required-size-of-virtual-memory">Docker: Elasticsearch required size of virtual memory</a></li>
+            <li><a href="#docker-elasticsearch-required-open-files-limit">Docker: Elasticsearch required open files limit</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
@@ -121,22 +120,15 @@
 minumum requirements of the code contributions.</p>
 <p>Before contributing (or opening issues), you might want send us an email at starchat@getjenny.com.</p>
 <h1 id="quick-start">Quick Start</h1>
-<h2 id="requirements">Requirements</h2>
-<p>The easiest way is to install StarChat using two docker images. You only need:</p>
-<ul>
-<li><a href="http://www.scala-sbt.org">sbt</a></li>
-<li><a href="https://docs.docker.com/engine/installation/">docker</a></li>
-<li><a href="https://docs.docker.com/compose/install/">docker compose</a></li>
-</ul>
-<p>In this way, you will put all the indices in the Elasticsearch (version 6.1) image, and StarChat itself in the Java (8) image.</p>
-<p><em>If you do not use docker</em> you therefore need on your machine:</p>
-<ol>
-<li><a href="http://scala-lang.org">Scala 12.2</a></li>
-<li><a href="http://elastic.co">Elasticsearch 5.4</a></li>
-</ol>
-<h2 id="setup-with-docker-recommended">Setup with Docker (recommended)</h2>
-<h3 id="1-launch-docker-containers">1. Launch Docker containers</h3>
-<p>We have made available all the containers needed for having StarChat up and running without local compiling.</p>
+<h2 id="1-installation">1. Installation</h2>
+<p>The easiest way is to install StarChat using two docker images. 
+You only need:
+<em> <a href="https://docs.docker.com/engine/installation/">docker</a>
+</em> <a href="https://docs.docker.com/compose/install/">docker compose</a></p>
+<p>We have made available the containers needed for having StarChat up and running without local compiling:
+On container is for the Elasticsearch (version 7.0.0) image the other for the StarChat itself in the Java (8) image.</p>
+<p>For instruction about docker installation on  Ubuntu platform refer to <a href="https://docs.docker.com/install/linux/docker-ce/ubuntu/">docker for Ubuntu</a></p>
+<h3 id="11-run-prebuilt-docker-containers">1.1 Run Prebuilt Docker containers</h3>
 <p>To use them, you need to download <a href="https://github.com/GetJenny/starchat-docker">Starchat Docker</a> or simply type:</p>
 <pre><code class="bash">git clone  https://github.com/GetJenny/starchat-docker.git
 </code></pre>
@@ -145,98 +137,116 @@ minumum requirements of the code contributions.</p>
 <pre><code class="bash">docker-compose up -d
 </code></pre>
 
-<p>If you get an  <code>ERROR: Version in "./docker-compose.yml" is unsupported.</code> you need to update docker-compose to the version indicated in the <code>docker-compose.yml</code> file. Note that it might not be available on ubuntu (we need to use a very recent one). If that's the case see eg <a href="https://stackoverflow.com/questions/49839028/how-to-upgrade-docker-compose-to-latest-version">stackoverflow</a>.</p>
-<p>Now you should have a running instance on port 8888. (If you want to change ports, eg because you have other services on 8888/9200/9300, change the values in docker-compose.yml)</p>
-<p>(Problems like <code>elastisearch exited with code 78</code>? have a look at <a href="#troubleshooting">troubleshooting</a>!)</p>
-<h4 id="change-manaus-language">Change Manaus Language</h4>
-<p>In the file <code>docker-compose.yml</code> change:</p>
-<pre><code class="json">    command: [&quot;/manaus/scripts/wait-for-it.sh&quot;, 
-    &quot;getjenny-es&quot;, &quot;9200&quot;, &quot;5&quot;, 
-    &quot;/manaus/bin/continuous-keywords-update&quot;, &quot;--temp_data_folder&quot;, 
-    &quot;/manaus/data&quot;, 
-    &quot;--host_map&quot;, &quot;getjenny-es=9300&quot;, &quot;--interval_sec&quot;, &quot;14400&quot;, 
-    &quot;--word_frequencies&quot;, 
-    &quot;/manaus/statistics_data/english/word_frequency.tsv&quot;, 
-    &quot;--cluster_name&quot;, &quot;starchat&quot;, &quot;--index_name&quot;, &quot;jenny-en-0&quot;]
+<p>If you get an  <code>ERROR: Version in "./docker-compose.yml" is unsupported.</code> you need to update docker-compose to the version indicated in the <code>docker-compose.yml</code> file. Note that it might not be available on old version of ubuntu (we need to use a very recent one). If that's the case see eg <a href="https://stackoverflow.com/questions/49839028/how-to-upgrade-docker-compose-to-latest-version">stackoverflow</a>.
+If you want to change default ports, eg because you have other services on 8888/9200/9300, change the values in docker-compose.yml.</p>
+<p>To test elasticsearch and starchat started correctly  you can send the following command</p>
+<pre><code class="bash">curl -X GET localhost:8888
 </code></pre>
 
-<p>to</p>
-<pre><code class="json">    command: [&quot;/manaus/scripts/wait-for-it.sh&quot;, 
-    &quot;getjenny-es&quot;, &quot;9200&quot;, &quot;5&quot;, 
-    &quot;/manaus/bin/continuous-keywords-update&quot;, &quot;--temp_data_folder&quot;, 
-    &quot;/manaus/data&quot;, 
-    &quot;--host_map&quot;, &quot;getjenny-es=9300&quot;, &quot;--interval_sec&quot;, &quot;14400&quot;, 
-    &quot;--word_frequencies&quot;, &quot;/manaus/statistics_data/***italian***/word_frequency.tsv&quot;, 
-    &quot;--cluster_name&quot;, &quot;starchat&quot;, &quot;--index_name&quot;,  &quot;***jenny-it-0***&quot;]
+<p>If you don't get OK replay you can check the output logs of elasticsearch and start-chat  starting the containers without detached mode option.</p>
+<pre><code class="bash">docker-compose up
 </code></pre>
 
-<h3 id="2-create-elasticsearch-indices">2. Create Elasticsearch indices</h3>
-<p>Run from a terminal:</p>
-<pre><code class="bash"># create the system indices in Elasticsearch
-PORT=${1:-8888}
-curl -v -H &quot;Authorization: Basic `echo -n 'admin:adminp4ssw0rd' | base64`&quot; \
-  -H &quot;Content-Type: application/json&quot; -X POST &quot;http://localhost:${PORT}/system_index_management/create&quot;
+<p>Elasticsearch makes some boostrap check. If they failed elasiticsearch quits with message <code>elastisearch exited with code 78</code>.
+Possible fails reason are:
+1. max file descriptors [4096] for elasticsearch process is too low, increase to at least [65535]
+2. max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]
+ have a look at <a href="#troubleshooting">troubleshooting</a> in order to solve them.</p>
+<p>StarChat supports the user authentication and the default Elasticsearch user used is the built-in user "elastic". The password can be changed using the following command from a running container:</p>
+<pre><code class="bash">docker exec -i -t docker-starchat_elasticsearch_1 /usr/share/elasticsearch/bin/elasticsearch-keystore add &quot;bootstrap.password&quot; 
 </code></pre>
 
-<p>If you are using another language than English, replace english in the name of the index:</p>
-<pre><code class="bash"># create the application indices on Elasticsearch
-PORT=${1:-8888}
-INDEX_NAME=${2:-index_getjenny_english_0}
-curl -v -H &quot;Authorization: Basic `echo -n 'admin:adminp4ssw0rd' | base64`&quot; \
-  -H &quot;Content-Type: application/json&quot; -X POST &quot;http://localhost:${PORT}/${INDEX_NAME}/index_management/create&quot;
+<p>When using this command the file elasticsearch.keystore is updated. The password can be set even up on ES using a native user.</p>
+<h3 id="12-elasticsearch-configuration">1.2 Elasticsearch Configuration</h3>
+<p>Now you need to configure Elastic search performing the following operations:</p>
+<ol>
+<li>Creating the system indices</li>
+<li>Creating the application indices</li>
+<li>Creating a new user associated with read/write privileges on the application indices</li>
+</ol>
+<p>The three steps can be accomplished by running some scripts that can be found in the <code>starchat-docker/scripts</code> directory.
+The scripts assume you are using the default port 8888 and the index based on english language. If you need to change these parameters edit accordingly the variabile PORT and INDEX_NAME you can find in the scripts</p>
+<pre><code class="bash">cd starchat-docker/scripts
+#System Indices creation (admin privileged execution)
+./postSystemIndexManagementCreate.sh
+#Application Indices creation (admin privileged execution)
+./postIndexManagementCreate.sh
+#User with creation (admin privileged execution)
+./insertUser.sh
 </code></pre>
 
-<pre><code class="bash"># add a user to the system associated to the application index index_getjenny_english_0 previously created
-PORT=${1:-8888}
-curl -v -H &quot;Authorization: Basic `echo -n 'admin:adminp4ssw0rd' | base64`&quot; \
-  -H &quot;Content-Type: application/json&quot; -X POST http://localhost:${PORT}/user -d '{
-        &quot;id&quot;: &quot;test_user&quot;,
-        &quot;password&quot;: &quot;3c98bf19cb962ac4cd0227142b3495ab1be46534061919f792254b80c0f3e566f7819cae73bdc616af0ff555f7460ac96d88d56338d659ebd93e2be858ce1cf9&quot;, 
-        &quot;salt&quot;: &quot;salt&quot;,
-        &quot;permissions&quot;: {
-                &quot;index_getjenny_english_0&quot;: [&quot;read&quot;, &quot;write&quot;]
-        }
-}'
-</code></pre>
-
-<h3 id="3-load-the-configuration-file">3. Load the configuration file</h3>
-<p>Now you have to load the configuration file for the actual chat, aka <a href="#services">decision table</a>. We have provided an <a href="https://github.com/GetJenny/starchat/tree/master/doc">example configuration file in English</a>, therefore:</p>
-<pre><code class="bash">cd $STARCHAT  # so we have doc/decision_table_starchat_doc.csv
-PORT=${1:-8888}
-INDEX_NAME=${2:-'index_getjenny_english_0'}
-FILENAME=${3:-&quot;`readlink -e doc/decision_table_starchat_doc.csv`&quot;}
-curl -v -H &quot;Authorization: Basic `echo -n 'test_user:p4ssw0rd' | base64`&quot; \
-  --form &quot;csv=@${FILENAME}&quot; http://localhost:${PORT}/${INDEX_NAME}/decisiontable/upload_csv
+<p>Scripts are based on RESTful API documented <a href="https://app.swaggerhub.com/apis/angleto/StarChat/v5.0">here</a>.</p>
+<h3 id="13-chat-decision-table-configuration">1.3 Chat Decision Table Configuration</h3>
+<p>Now you have to load the configuration file for the actual chat, aka <a href="#services">decision table</a>. We have provided the example configuration file <code>starchat-docker/scripts/decision_table_starchat_doc.csv</code>  running the script</p>
+<pre><code class="bash">./loadDecisionTableFile.sh
 </code></pre>
 
 <p>and then you need to index the analyzer:</p>
-<pre><code class="bash">PORT=${1:-8888}
-INDEX_NAME=${2:-index_getjenny_english_0}
-curl -v -H &quot;Authorization: Basic `echo -n 'test_user:p4ssw0rd' | base64`&quot; \
-  -H &quot;Content-Type: application/json&quot; -X POST &quot;http://localhost:${PORT}/${INDEX_NAME}/decisiontable_analyzer&quot;
+<pre><code class="bash">./postIndexAnalyzer.sh
 </code></pre>
 
-<p>In case you want to delete all states previously loaded, this endpoint deletes all the states:</p>
-<pre><code class="bash">PORT=${1:-8888}
-INDEX_NAME=${2:-index_getjenny_english_0}
-curl -v -H &quot;Authorization: Basic `echo -n 'test_user:p4ssw0rd' | base64`&quot; \
-  -H &quot;Content-Type: application/json&quot; -X DELETE http://localhost:${PORT}/${INDEX_NAME}/decisiontable
+<p>In case you want to delete all states previously loaded you need to delete the decision table previously loaded running the script</p>
+<pre><code class="bash">./postDeleteAllDecisionTables.sh
 </code></pre>
 
-<h3 id="4-load-external-corpus-optional">4. Load external corpus (optional)</h3>
-<p>To have a good words' statistics, and consequent improved matching, you might want to index a corpus which is hidden from results. For instance, you can index various sentences as hidden using the <a href="#post-knowledgebase">POST /knowledgebase</a> endpoint with <code>doctype: "hidden"</code>.</p>
-<h3 id="5-index-the-faqs-optional">5. Index the FAQs (optional)</h3>
+<h3 id="15-index-the-faqs-optional">1.5 Index the FAQs (optional)</h3>
 <p>TODO: You might want to activate the <a href="#configuration-of-the-answer-recommender-knowledge-base">knowledge base</a> for simple Question and Anwer. </p>
-<h2 id="install-without-docker">Install without Docker</h2>
-<p>Note: we do not support this installation.</p>
-<ul>
-<li>Clone the repository and enter the starchat directory.</li>
-<li>Initialize the Elasticsearch instance (see above for Docker)</li>
-<li>Run the service: <code>sbt compile run</code></li>
-</ul>
-<p>The service binds on the port 8888 by default.</p>
-<h2 id="install-local-docker-for-testing-branches">Install local Docker (for testing branches)</h2>
-<p>Generate a packet distribution. In StarChat directory:</p>
+<h3 id="16-installation-test">1.6 Installation Test</h3>
+<p>Is the service working? But first: <em>did you load a configuration file</em>? If yes, try:</p>
+<p><code>curl -X GET localhost:8888</code></p>
+<p>Now try to ask question to the bot running the script:</p>
+<pre><code class="bash">./getNextResponseSearch.sh &quot;contribute&quot;
+</code></pre>
+
+<p>You should get:</p>
+<pre><code class="json">[
+   {
+      &quot;action&quot;:&quot;&quot;,
+      &quot;actionInput&quot;:{},
+      &quot;analyzer&quot;:&quot;bor(keyword(\&quot;contribute\&quot;))&quot;,
+      &quot;bubble&quot;:&quot;To contribute to &lt;a href=\&quot;http://git.io/*chat\&quot;&gt;StarChat&lt;/a&gt;, please send us a pull request from your fork of this repository.\n&lt;br&gt;Our concise contribution guideline contains the bare minimum requirements of the code contributions.\n&lt;br&gt;Before contributing (or opening issues), you might want to email us at starchat@getjenny.com.&quot;,
+      &quot;conversationId&quot;:&quot;1234&quot;,
+      &quot;data&quot;:{
+
+      },
+      &quot;failureValue&quot;:&quot;&quot;,
+      &quot;maxStateCount&quot;:0,
+      &quot;score&quot;:1.0,
+      &quot;state&quot;:&quot;contribute&quot;,
+      &quot;stateData&quot;:{
+
+      },
+      &quot;successValue&quot;:&quot;&quot;,
+      &quot;traversedStates&quot;:[
+         &quot;contribute&quot;
+      ]
+   }
+]
+</code></pre>
+
+<p>If you look at the <code>"analyzer"</code> field, you'll see that this state is triggered when
+the user types the <em>contribute</em>.  The <code>"bubble"</code> field contains the response.</p>
+<h2 id="2-development-envinroment">2. Development Envinroment</h2>
+<p>The easiest way to modify the StarChat source code, recompile and test changes is to:</p>
+<ol>
+<li>Install <a href="http://www.scala-sbt.org">sbt</a> </li>
+<li>Clone [StarChat repository] (https://github.com/GetJenny/starchat)</li>
+<li>Clone <a href="https://github.com/GetJenny/starchat-docker">Starchat Docker</a> as explained at 1.1</li>
+</ol>
+<p>and running the commands</p>
+<pre><code class="bash">## Start ElasticSearch from docker preconfigured container
+cd starchat-docker/
+docker-compose up elasticsearch 
+</code></pre>
+
+<pre><code class="bash">## Compile and Run StarChat
+cd starchat/
+sbt compile run
+</code></pre>
+
+<p>Now StarChat is running and you can configure and test the installation as explained in <a href="#1-installation">Installation</a></p>
+<h2 id="3-docker-image-creation-for-testing-branches">3. Docker Image Creation for testing branches</h2>
+<p>If you want to generate a new docker image to be distributed you need to run in StarChat directory:</p>
 <pre><code class="bash">sbt dist
 </code></pre>
 
@@ -251,14 +261,13 @@ ln -s starchat-4ee..../  starchat
 
 <p>The zip packet contains:</p>
 <ul>
-<li>a set of scripts to test the endpoints and as a complement for the documentation: <code>starchat/scripts/api_test/</code></li>
 <li>a set of command line programs <code>starchat/bin</code> to run starchat and other tools.</li>
+<li>a set of scripts to test the endpoints and as a complement for the documentation: <code>starchat/scripts/api_test/</code></li>
 <li>delete-decision-table: application to delete items from the decision table</li>
 <li>index-corpus-on-knowledge-base: application to index a corpus on knowledge base as hidden (to improve the language model)</li>
 <li>index-decision-table: application to index data on the decision table from a csv</li>
 <li>index-knowledge-base: application to index data into the knowledge base</li>
 <li>index-terms: application to index terms vectors</li>
-<li>starchat: start starchat</li>
 </ul>
 <p>Review the configuration files <code>starchat/config/application.conf</code> and configure the language if needed (by default you have <code>index_language = "english"</code>)</p>
 <p>(If you are re-installing StarChat, and want to start from scratch see <a href="#docker-start-from-scratch">start from scratch</a>.)</p>
@@ -266,49 +275,9 @@ ln -s starchat-4ee..../  starchat
 <pre><code class="bash">docker-compose up -d
 </code></pre>
 
-<p>(Problems like <code>elastisearch exited with code 78</code>? have a look at <a href="#troubleshooting">troubleshooting</a>!)</p>
-<h2 id="test-the-installation">Test the installation</h2>
-<p>Is the service working? But first: <em>did you load a configuration file</em>? If yes, try:</p>
-<p><code>curl -X GET localhost:8888 | python -mjson.tool</code></p>
-<p>Get the <code>test_state</code></p>
-<pre><code class="bash">PORT=${2:-8888}
-INDEX_NAME=${3:-index_getjenny_english_0}
-curl -v -H &quot;Authorization: Basic `echo -n 'test_user:p4ssw0rd' | base64`&quot; \
- -H &quot;Content-Type: application/json&quot; -X POST http://localhost:${PORT}/${INDEX_NAME}/get_next_response -d '{
- &quot;conversation_id&quot;: &quot;1234&quot;,
-  &quot;user_input&quot;: { &quot;text&quot;: &quot;install starchat&quot; },
-  &quot;values&quot;: {
-      &quot;return_value&quot;: &quot;&quot;,
-      &quot;data&quot;: {}
-       }
-  }'
-</code></pre>
-
-<p>You should get:</p>
-<pre><code class="json">[
-   {
-      &quot;state&quot; : &quot;install&quot;,
-      &quot;data&quot; : {},
-      &quot;action&quot; : &quot;&quot;,
-      &quot;success_value&quot; : &quot;&quot;,
-      &quot;state_data&quot; : {},
-      &quot;score&quot; : 1,
-      &quot;conversation_id&quot; : &quot;1234&quot;,
-      &quot;traversed_states&quot; : [
-         &quot;install&quot;
-      ],
-      &quot;max_state_count&quot; : 0,
-      &quot;action_input&quot; : {},
-      &quot;analyzer&quot; : &quot;band(bor(keyword(\&quot;setup\&quot;), keyword(\&quot;install.*\&quot;)), bnot(bor(keyword(\&quot;standalone\&quot;), keyword(\&quot;docker\&quot;))))&quot;,
-      &quot;bubble&quot; : &quot;Just choose one of the two:\n&lt;ul&gt;\n&lt;li&gt;docker install (recommended)&lt;/li&gt;\n&lt;li&gt;standalone install&lt;/li&gt;\n&lt;/ul&gt;&quot;,
-      &quot;failure_value&quot; : &quot;&quot;
-   }
-]
-</code></pre>
-
-<p>If you look at the <code>"analyzer"</code> field, you'll see that this state is triggered when
-the user types the <em>test</em> and either <em>get</em> or <em>send</em>. Try with <code>"text": "Please dont send me the test state"</code>
- and StarChat will send an empty message.</p>
+<p>Now StarChat is running and you can configure and test the installation as explained in <a href="#1-installation">Installation</a>
+If you get <code>org.elasticsearch.bootstrap.StartupException: ElasticsearchException[failed to bind service]; 
+nested: AccessDeniedException[/usr/share/elasticsearch/data/nodes</code> be sure that <code>docker-starchat/elasticsearch</code> is accessible to docker service.</p>
 <h2 id="configuration-of-the-chatbot-decision-table">Configuration of the chatbot (Decision Table)</h2>
 <p>With StarChat's Decision Table you can easily implement workflow-based chatbots. After the installation (see above)
 you only have to configure a conversation flow and eventually a front-end client.</p>
@@ -371,7 +340,7 @@ send-updates    | ... | &quot;Where can we send you updates?&quot;    |
 <li><em>keyword("pass.*")</em>: as explained above, detects any word starting with "pass". Normalized.</li>
 <li><em>regex(regex)</em>: evaluate a regular expression, not normalized</li>
 <li><em>search(state-name)</em>: take a state name as argument, queries elastic search and returns the score of the most similar query in the field  <code>queries</code> of the argument's state. In other words, it does what it would do without any analyzer, only with a normalized score -e.g. <code>search("lost_password_state")</code> </li>
-<li><em>matchPatternRegex(regex)</em>: A generic pattern extraction analyzer, it extract named patterns matching a given regex e.g. the following will match tree numbers separated by semicolumn: [first,second,third](?:([0-9]+:[0-9]:[0-9]+) if the regex matches it will create the entries into the state variables dictionary e.g.: 10:11:12 will result in Map("first.0" -&gt; "10", "second.0" -&gt; "11", "third.0" -&gt; "12") the number at the end of the name is an index incremented for multiple occurrences of the pattern in the query</li>
+<li><em>matchPatternRegex(regex)</em>: A generic pattern extraction analyzer, it extract named patterns matching a given regex e.g. the following will match tree numbers separated by semicolumn: <a href="?:([0-9]+:[0-9]:[0-9]+) if the regex matches it will create the entries into the state variables dictionary e.g.: 10:11:12 will result in Map(" title="first.0&quot; -&gt; &quot;10&quot;, &quot;second.0&quot; -&gt; &quot;11&quot;, &quot;third.0&quot; -&gt; &quot;12">first,second,third</a> the number at the end of the name is an index incremented for multiple occurrences of the pattern in the query</li>
 <li><em>matchDateDDMMYYYY(prefix)</em>: parse a date in DDMMYYYY format and set <code>prefixday.0</code>, <code>prefixmonth.0</code>, <code>prefixyear.0</code>.</li>
 <li><em>existsVariable(variable-name)</em>: check whether a variable exists or not </li>
 <li><em>hasTravState(state-name)</em>: check if a state_name is present into the history of traversed states</li>
@@ -714,15 +683,23 @@ docker-compose up starchat # starchat will retrieve the Analyzers from elasticse
 <pre><code class="bash">curl -v -H &quot;Content-Type: application/json&quot; -X POST &quot;http://localhost:8888/decisiontable_analyzer&quot;
 </code></pre>
 
-<h2 id="docker-size-of-virtual-memory">Docker: Size of virtual memory</h2>
-<p>If elasticsearch complain about the size of the virtual memory:</p>
+<h2 id="docker-elasticsearch-required-size-of-virtual-memory">Docker: Elasticsearch required size of virtual memory</h2>
+<p>If elasticsearch complains about the size of the virtual memory:</p>
 <pre><code>max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]
 elastisearch exited with code 78
 </code></pre>
 
 <p>run:</p>
 <pre><code class="bash">sysctl -w vm.max_map_count=262144
-</code></pre></div>
+</code></pre>
+
+<h2 id="docker-elasticsearch-required-open-files-limit">Docker: Elasticsearch required open files limit</h2>
+<p>If elasticsearch complains about the limit of the open files:</p>
+<pre><code>max file descriptors [4096] for elasticsearch process is too low, increase to at least [65535]
+</code></pre>
+
+<p>you should increase the limit of max open files.
+<a href="https://askubuntu.com/questions/1049058/how-to-increase-max-open-files-limit-on-ubuntu-18-04?r=SearchResults">Here</a> you can find instruction for Ubuntu 18.04 </p></div>
         </div>
 
         <footer class="col-md-12">
@@ -731,7 +708,7 @@ elastisearch exited with code 78
         </footer>
         <script>
             var base_url = ".",
-                shortcuts = {"search": 83, "next": 78, "help": 191, "previous": 80};
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
         </script>
         <script src="js/base.js" defer></script>
         <script src="search/main.js" defer></script>
@@ -804,6 +781,6 @@ elastisearch exited with code 78
 </html>
 
 <!--
-MkDocs version : 1.0.2
-Build Date UTC : 2019-04-24 14:29:30
+MkDocs version : 1.0.4
+Build Date UTC : 2019-08-05 07:07:30
 -->
