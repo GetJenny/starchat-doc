@@ -761,10 +761,24 @@ run:
 sysctl -w vm.max_map_count=262144
 ```
 ## Docker: Elasticsearch required open files limit
+
 If elasticsearch complains about the limit of the open files:
 ```
 max file descriptors [4096] for elasticsearch process is too low, increase to at least [65535]
 ```
 you should increase the limit of max open files.
 [Here](https://askubuntu.com/questions/1049058/how-to-increase-max-open-files-limit-on-ubuntu-18-04?r=SearchResults) you can find instruction for Ubuntu 18.04 
+## `sbt dist`
 
+In case you have ununderstandable errors from `sbt dist`, like this one:
+
+```
+[error] null
+[error] scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:5239)
+[error] scala.tools.nsc.transform.Erasure$Eraser.typed1(Erasure.scala:789)
+[error] scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:5617)
+[error] scala.tools.nsc.transform.Erasure$Eraser.adaptMember(Erasure.scala:714)
+[error] scala.tools.nsc.transform.Erasure$Eraser.typed1(Erasure.scala:789)
+```
+
+try to increase the amount of memory given to the jvm, adding `javacOptions += "-Xss2048K"` in `build.sbt` just above the scalacOptions.
