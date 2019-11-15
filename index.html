@@ -341,7 +341,7 @@ send-updates    | ... | &quot;Where can we send you updates?&quot;    |
 <li><em>keyword("pass.*")</em>: as explained above, detects any word starting with "pass". Normalized.</li>
 <li><em>regex(regex)</em>: evaluate a regular expression, not normalized</li>
 <li><em>search(state-name)</em>: take a state name as argument, queries elastic search and returns the score of the most similar query in the field  <code>queries</code> of the argument's state. In other words, it does what it would do without any analyzer, only with a normalized score -e.g. <code>search("lost_password_state")</code> </li>
-<li><em>matchPatternRegex(regex)</em>: A generic pattern extraction analyzer, it extract named patterns matching a given regex e.g. the following will match tree numbers separated by semicolumn: <code>[first,second,third](?:([0-9]+:[0-9]:[0-9]+)</code> if the regex matches it will create the entries into the state variables dictionary e.g.: 10:11:12 will result in Map("first.0" -&gt; "10", "second.0" -&gt; "11", "third.0" -&gt; "12") the number at the end of the name is an index incremented for multiple occurrences of the pattern in the query</li>
+<li><em>matchPatternRegex(regex)</em>: A generic pattern extraction analyzer, it extract named patterns matching a given regex. E.g., the following will match tree numbers separated by column: <code>[first,second,third](?:([0-9]+:[0-9]:[0-9]+)</code>. If the regex matches, it will create the entries into the state variables dictionary. The string "10:11:12" will result in Map("first.0" -&gt; "10", "second.0" -&gt; "11", "third.0" -&gt; "12"). The number at the end of the name is an index incremented for multiple occurrences of the pattern in the query</li>
 <li><em>matchDateDDMMYYYY(prefix)</em>: parse a date in DDMMYYYY format and set <code>prefixday.0</code>, <code>prefixmonth.0</code>, <code>prefixyear.0</code>.</li>
 <li><em>existsVariable(variable-name)</em>: check whether a variable exists or not </li>
 <li><em>hasTravState(state-name)</em>: check if a state_name is present into the history of traversed states</li>
@@ -794,5 +794,5 @@ elastisearch exited with code 78
 
 <!--
 MkDocs version : 1.0.4
-Build Date UTC : 2019-11-15 10:25:32
+Build Date UTC : 2019-11-15 10:27:54
 -->
